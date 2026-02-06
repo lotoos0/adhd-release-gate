@@ -10,11 +10,14 @@ Runs tests, generates a deterministic demo proof, fingerprints it, appends a 3-l
 2. **Proof or nothing** — every release requires working demo saved to `artifacts/proof.txt` (<10s)
 3. **Release from main** — `make release` works only from `main` branch with clean git status
 
-## 6 Commands
+## 7 Commands
 
 ```bash
 # Initialize in new repo (idempotent)
 make init
+
+# Check system status (last tag, gate status, working tree)
+make status
 
 # Check if you can start new feature
 make feature

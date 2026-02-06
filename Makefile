@@ -1,4 +1,4 @@
-.PHONY: init test demo gate-check feature release
+.PHONY: init test demo gate-check feature release status
 
 init:
 	@mkdir -p artifacts scripts
@@ -44,3 +44,35 @@ feature:
 
 release:
 	@bash scripts/release.sh
+
+status:
+	@echo "=== ADHD Release Gate Status ==="
+	@LAST_TAG=$$(git describe --tags --abbrev=0 2>/dev/null || echo "none"); \
+	echo "Last tag: $$LAST_TAG"
+	@if [ -f CHANGELOG.md ]; then \
+		LAST_RELEASE=$$(tail -1 CHANGELOG.md | grep -v "^#" || echo "none"); \
+		echo "Last release: $$LAST_RELEASE"; \
+	fi
+	@BRANCH=$$(git branch --show-current); \
+	echo "Current branch: $$BRANCH"
+	@if [ -n "$$(git status --porcelain)" ]; then \
+		echo "Working tree: DIRTY"; \
+	else \
+		echo "Working tree: clean"; \
+	fi
+	@LAST_TAG=$$(git describe --tags --abbrev=0 2>/dev/null || echo ""); \
+	if [ -z "$$LAST_TAG" ]; then \
+		FEAT_COUNT=$$(git log --oneline --grep="^feat:" | wc -l | tr -d '[:space:]'); \
+		if [ $$FEAT_COUNT -gt 0 ]; then \
+			echo "Gate: BLOCKED ($$FEAT_COUNT unreleased feat commits)"; \
+		else \
+			echo "Gate: OPEN"; \
+		fi; \
+	else \
+		FEAT_COUNT=$$(git log $$LAST_TAG..HEAD --oneline --grep="^feat:" | wc -l | tr -d '[:space:]'); \
+		if [ $$FEAT_COUNT -gt 0 ]; then \
+			echo "Gate: BLOCKED ($$FEAT_COUNT unreleased feat commits since $$LAST_TAG)"; \
+		else \
+			echo "Gate: OPEN"; \
+		fi; \
+	fi
